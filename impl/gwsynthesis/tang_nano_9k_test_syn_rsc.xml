@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module name="top" T_Register="174(0)" T_Alu="37(0)" T_Lut="329(0)" T_Bsram="1(0)">
+ <SubModule name="uart_inastance" Register="105" Alu="24" Lut="184" T_Register="105(105)" T_Alu="24(24)" T_Lut="184(184)"/>
+ <SubModule name="screen_instance" Register="68" Alu="13" Lut="142" T_Register="68(68)" T_Alu="13(13)" T_Lut="142(142)"/>
+ <SubModule name="textEngine_instance" Register="1" Lut="3" Bsram="1" T_Register="1(1)" T_Lut="3(3)" T_Bsram="1(1)"/>
+</Module>
