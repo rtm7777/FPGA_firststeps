@@ -7,7 +7,11 @@ module uart
     input  wire       uart_rx,
     output wire       uart_tx,
     input  wire       btn1,
-    output reg  [5:0] led
+    output reg  [5:0] led,
+    output reg        byteReady,
+    output reg        msgReady,
+    output reg  [7:0] dataIn
+
 );
     localparam HALF_DELAY_WAIT = (DELAY_FRAMES / 2);
     localparam MEMORY_LENGTH = 11;
@@ -34,6 +38,9 @@ module uart
     localparam RX_STATE_READ = 3;
     localparam RX_STATE_STOP_BIT = 4;
 
+    localparam MSG_STATE_IDLE = 0;
+    localparam MSG_STATE_RECEIVING = 1;
+
     localparam TX_STATE_IDLE = 0;
     localparam TX_STATE_START_BIT = 1;
     localparam TX_STATE_WRITE = 2;
@@ -43,8 +50,6 @@ module uart
     reg [3:0] rxState = 0;
     reg [12:0] rxCounter = 0;
     reg [2:0] rxBitNumber = 0;
-    reg [7:0] dataIn = 0;
-    reg byteReady = 0;
 
     reg [3:0] txState = 0;
     reg [24:0] txCounter = 0;
@@ -114,6 +119,32 @@ module uart
                     rxState <= RX_STATE_IDLE;
                     rxCounter <= 0;
                     byteReady <= 1;
+                end
+            end
+        endcase
+    end
+
+    reg [7:0] msgCounter = 0;
+    reg [1:0] msgState = 0;
+
+    always @(posedge clk) begin
+        case(msgState)
+            MSG_STATE_IDLE: begin
+                if (byteReady) begin
+                    msgState <= MSG_STATE_RECEIVING;
+                    msgCounter <= 0;
+                    msgReady <= 0;
+                end
+            end
+            MSG_STATE_RECEIVING: begin
+                if (byteReady) begin
+                    msgCounter <= 0;
+                    msgReady <= 0;
+                end else if (msgCounter == HALF_DELAY_WAIT * 6) begin
+                    msgState <= MSG_STATE_IDLE;
+                    msgReady <= 1;
+                end else begin
+                    msgCounter <= msgCounter + 1;
                 end
             end
         endcase

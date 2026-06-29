@@ -1,0 +1,64 @@
+# macOS
+.DS_Store
+
+# User/project local settings
+*.user
+*.gprj.user
+
+# Simulation outputs
+*.vcd
+*.o
+*.log
+
+# Gowin project outputs and intermediate files
+impl/
+temp/
+*.vg
+*.binx
+*.fs
+*.rpt
+*.rpt.html
+*.prj
+*.pin.html
+*.tr.html
+*.tr_cata.html
+*.tr_content.html
+*.power.html
+*.syn_resource.html
+*.syn_rsc.xml
+*.json
+
+# Quartus/FPGA tool artifacts (if used)
+*.sld
+*.sdc
+*.svf
+*.xst
+*.ngc
+*.ngo
+*.ncd
+*.edf
+*.map
+*.par
+*.bit
+*.mcs
+*.rbf
+*.csv
+*.stx
+*.rpt
+
+# VCS/ModelSim/other simulator work files
+*.wlf
+*.key
+*.history
+*.jou
+
+# Backup and temp files
+*~
+*.bak
+*.swp
+*.tmp
+*.temp
+
+# IDE/editor
+.vscode/
+.idea/
