@@ -124,20 +124,20 @@ module uart
         endcase
     end
 
-    reg [7:0] msgCounter = 0;
+    reg [9:0] msgCounter = 0;
     reg [1:0] msgState = 0;
 
     always @(posedge clk) begin
         case(msgState)
             MSG_STATE_IDLE: begin
-                if (byteReady) begin
+                if (!byteReady) begin
                     msgState <= MSG_STATE_RECEIVING;
                     msgCounter <= 0;
                     msgReady <= 0;
                 end
             end
             MSG_STATE_RECEIVING: begin
-                if (byteReady) begin
+                if (!byteReady) begin
                     msgCounter <= 0;
                     msgReady <= 0;
                 end else if (msgCounter == HALF_DELAY_WAIT * 6) begin

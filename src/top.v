@@ -29,6 +29,7 @@ module top
     reg [7:0] charOutput;
 
     wire uartByteReady;
+    wire uartMsgReady;
     wire [7:0] uartDataIn;
     wire [1:0] rowNumber;
 
@@ -49,6 +50,7 @@ module top
         .btn1    (btn1),
         .led     (led),
         .byteReady(uartByteReady),
+        .msgReady(uartMsgReady),
         .dataIn  (uartDataIn)
     );
 
@@ -78,11 +80,12 @@ module top
     wire [7:0] charOut1;
 
     uartTextRow row1(
-        clk,
-        uartByteReady,
-        uartDataIn,
-        charAddress[3:0],
-        charOut1
+        .clk(clk),
+        .byteReady(uartByteReady),
+        .msgReady(uartMsgReady),
+        .data(uartDataIn),
+        .outputCharIndex(charAddress[3:0]),
+        .outByte(charOut1)
     );
 
     always @(posedge clk) begin
