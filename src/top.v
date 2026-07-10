@@ -88,14 +88,40 @@ module top
         .outByte(charOut1)
     );
 
+    wire [7:0] counterValue;
+    wire [7:0] charOut2;
+
+    counterM
+    #(
+        .WAIT_TIME(1000000)
+    ) c (
+        .clk(clk),
+        .counterValue(counterValue)
+    );
+
+    decRow row2(
+        .clk(clk),
+        .value(counterValue),
+        .outputCharIndex(charAddress[3:0]),
+        .outByte(charOut2)
+    );
+
+    wire [7:0] progressPixelData;
+    progressRow row4(
+        .clk(clk),
+        .value(counterValue),
+        .pixelAddress(pixelAddress),
+        .outByte(progressPixelData)
+    );
+
     always @(posedge clk) begin
         case (rowNumber)
             0: charOutput <= charOut1;
-            1: charOutput <= "B";
+            1: charOutput <= charOut2;
             2: charOutput <= "C";
             3: charOutput <= "D";
         endcase
     end
-    assign chosenPixelData = textPixelData;
+    assign chosenPixelData = (rowNumber == 2) ? progressPixelData : textPixelData;
 
 endmodule
