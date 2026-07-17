@@ -60,27 +60,6 @@ module uart
 
     assign uart_tx = txPinRegister;
 
-    // Synchronize and debounce btn1 so the FSM only ever sees a clean,
-    // stable level (raw button bounce was glitching the FSM mid-transmission).
-    localparam BTN_DEBOUNCE_CYCLES = 25'd270000; // ~10ms @ 27MHz
-
-    reg [1:0] btn1Sync = 2'b11;
-    reg btn1Clean = 1;
-    reg [24:0] btn1DebounceCounter = 0;
-
-    always @(posedge clk) begin
-        btn1Sync <= {btn1Sync[0], btn1};
-
-        if (btn1Sync[1] != btn1Clean) begin
-            if (btn1DebounceCounter == BTN_DEBOUNCE_CYCLES) begin
-                btn1Clean <= btn1Sync[1];
-                btn1DebounceCounter <= 0;
-            end else
-                btn1DebounceCounter <= btn1DebounceCounter + 1;
-        end else
-            btn1DebounceCounter <= 0;
-    end
-
     always @(posedge clk) begin
         case (rxState)
             RX_STATE_IDLE: begin
@@ -159,7 +138,7 @@ module uart
     always @(posedge clk) begin
         case (txState)
             TX_STATE_IDLE: begin
-                if (btn1Clean == 0) begin
+                if (btn1 == 0) begin
                     txState <= TX_STATE_START_BIT;
                     txCounter <= 0;
                     txByteCounter <= 0;
@@ -201,14 +180,14 @@ module uart
                         txState <= TX_STATE_START_BIT;
                     end
                     txCounter <= 0;
-                end else 
+                end else
                     txCounter <= txCounter + 1;
             end
             TX_STATE_DEBOUNCE: begin
-                if (btn1Clean == 1)
-                    txState <= TX_STATE_IDLE;       // button released (already debounced)
+                if (btn1 == 1)
+                    txState <= TX_STATE_IDLE;
             end
-        endcase      
+        endcase
     end
 
 endmodule

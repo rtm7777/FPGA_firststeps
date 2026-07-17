@@ -9,13 +9,19 @@ module top
     input  wire       uart_rx,
     output wire       uart_tx,
     input  wire       btn1,
+    input  wire       btn2,
     output wire [5:0] led,
 
     output wire io_sclk,
     output wire io_sdin,
     output wire io_cs,
     output wire io_dc,
-    output wire io_reset
+    output wire io_reset,
+
+    output wire flashClk,
+    input  wire flashMiso,
+    output wire flashMosi,
+    output wire flashCs
 );
 
     localparam WAIT_TIME = 13500000;
@@ -41,13 +47,46 @@ module top
         end
     end
 
+    localparam BTN_DEBOUNCE_CYCLES = 25'd270000; // ~10ms @ 27MHz
+
+    reg [1:0] btn1Sync = 2'b11;
+    reg [1:0] btn2Sync = 2'b11;
+    reg btn1Clean = 1;
+    reg btn2Clean = 1;
+
+    reg [24:0] btn1DebounceCounter = 0;
+    reg [24:0] btn2DebounceCounter = 0;
+
+    always @(posedge clk) begin
+        btn1Sync <= {btn1Sync[0], btn1};
+        btn2Sync <= {btn2Sync[0], btn2};
+
+        if (btn1Sync[1] != btn1Clean) begin
+            if (btn1DebounceCounter == BTN_DEBOUNCE_CYCLES) begin
+                btn1Clean <= btn1Sync[1];
+                btn1DebounceCounter <= 0;
+            end else
+                btn1DebounceCounter <= btn1DebounceCounter + 1;
+        end else
+            btn1DebounceCounter <= 0;
+
+        if (btn2Sync[1] != btn2Clean) begin
+            if (btn2DebounceCounter == BTN_DEBOUNCE_CYCLES) begin
+                btn2Clean <= btn2Sync[1];
+                btn2DebounceCounter <= 0;
+            end else
+                btn2DebounceCounter <= btn2DebounceCounter + 1;
+        end else
+            btn2DebounceCounter <= 0;
+    end
+
     uart #(
         .DELAY_FRAMES(234)
     ) uart_inastance(
         .clk     (clk),
         .uart_rx (uart_rx),
         .uart_tx (uart_tx),
-        .btn1    (btn1),
+        .btn1    (btn1Clean),
         .led     (led),
         .byteReady(uartByteReady),
         .msgReady(uartMsgReady),
@@ -65,6 +104,20 @@ module top
         .io_reset(io_reset), 
         .pixelAddress(pixelAddress),
         .pixelData(chosenPixelData)
+    );
+
+    wire [7:0] charOutFlash;
+
+    flashNavigator externalFlash(
+        .clk(clk),
+        .flashClk(flashClk),
+        .flashMiso(flashMiso),
+        .flashMosi(flashMosi),
+        .flashCs(flashCs),
+        .charAddress(charAddress),
+        .charOutput(charOutFlash),
+        .btn1(btn1Clean),
+        .btn2(btn2Clean)
     );
 
     textEngine textEngine_instance(
@@ -119,7 +172,7 @@ module top
             0: charOutput <= charOut1;
             1: charOutput <= charOut2;
             2: charOutput <= "C";
-            3: charOutput <= "D";
+            3: charOutput <= charOutFlash;
         endcase
     end
     assign chosenPixelData = (rowNumber == 2) ? progressPixelData : textPixelData;

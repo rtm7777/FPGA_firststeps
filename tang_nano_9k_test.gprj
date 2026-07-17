@@ -6,6 +6,8 @@
     <Device name="GW1NR-9C" pn="GW1NR-LV9QN88PC6/I5">gw1nr9c-004</Device>
     <FileList>
         <File path="src/counter.v" type="file.verilog" enable="1"/>
+        <File path="src/flash.v" type="file.verilog" enable="1"/>
+        <File path="src/lfsr.v" type="file.verilog" enable="1"/>
         <File path="src/rows.v" type="file.verilog" enable="1"/>
         <File path="src/screen.v" type="file.verilog" enable="1"/>
         <File path="src/text.v" type="file.verilog" enable="1"/>
