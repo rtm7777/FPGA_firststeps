@@ -159,12 +159,19 @@ module top
         .outByte(charOut2)
     );
 
-    wire [7:0] progressPixelData;
-    progressRow row4(
+    // wire [7:0] progressPixelData;
+    // progressRow row4(
+    //     .clk(clk),
+    //     .value(counterValue),
+    //     .pixelAddress(pixelAddress),
+    //     .outByte(progressPixelData)
+    // );
+
+    wire [7:0] randomPixelData;
+    randomRow row5(
         .clk(clk),
-        .value(counterValue),
         .pixelAddress(pixelAddress),
-        .outByte(progressPixelData)
+        .outByte(randomPixelData)
     );
 
     always @(posedge clk) begin
@@ -175,6 +182,6 @@ module top
             3: charOutput <= charOutFlash;
         endcase
     end
-    assign chosenPixelData = (rowNumber == 2) ? progressPixelData : textPixelData;
+    assign chosenPixelData = (rowNumber == 2) ? randomPixelData : textPixelData;
 
 endmodule

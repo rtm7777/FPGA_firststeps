@@ -196,3 +196,68 @@ end
 
     assign outByte = outByteReg;
 endmodule
+
+module randomRow(
+    input wire clk,
+    input wire [9:0] pixelAddress,
+    output reg [7:0] outByte
+);
+    wire randomBit;
+
+    lfsr #(
+        .SEED(32'd1),
+        .TAPS(32'h80000412),
+        .NUM_BITS(32)
+    ) l1(
+        clk,
+        randomBit
+    );
+
+    reg [3:0] tempBuffer = 0;
+    always @(posedge clk) begin
+        tempBuffer <= {tempBuffer[2:0], randomBit};
+    end
+
+    localparam NUM_BITS_STORAGE = 8 * 128;
+    reg [NUM_BITS_STORAGE - 1:0] graphStorage = 0;
+        
+    reg [7:0] graphValue = 127;
+    reg [6:0] graphColumnIndex = 0;
+    reg [19:0] delayCounter = 0;
+
+    always @(posedge clk) begin
+        if (delayCounter == 20'd900000) begin
+            if (tempBuffer != 4'd15)
+                graphValue <= graphValue + tempBuffer - 8'd7;
+            delayCounter <= 0;
+            graphStorage[({3'd0, graphColumnIndex} << 3)+:8] <= graphValue;
+            graphColumnIndex <= graphColumnIndex + 1;
+        end
+        else
+            delayCounter <= delayCounter + 1;
+    end
+
+    wire [6:0] xCoord;
+    wire yCoord;
+
+    assign xCoord = pixelAddress[6:0] + graphColumnIndex;
+    assign yCoord = ~pixelAddress[7];
+
+    wire [7:0] currentGraphValue;
+    wire [3:0] maxYHeight;
+        
+    assign currentGraphValue = graphStorage[({3'd0,xCoord} << 3)+:8];
+    assign maxYHeight = currentGraphValue[7:4];
+
+    always @(posedge clk) begin
+    outByte[0] <= ({yCoord,3'd7} < maxYHeight);
+    outByte[1] <= ({yCoord,3'd6} < maxYHeight);
+    outByte[2] <= ({yCoord,3'd5} < maxYHeight);
+    outByte[3] <= ({yCoord,3'd4} < maxYHeight);
+    outByte[4] <= ({yCoord,3'd3} < maxYHeight);
+    outByte[5] <= ({yCoord,3'd2} < maxYHeight);
+    outByte[6] <= ({yCoord,3'd1} < maxYHeight);
+    outByte[7] <= ({yCoord,3'd0} < maxYHeight);
+end
+
+endmodule
