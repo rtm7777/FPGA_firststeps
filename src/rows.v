@@ -78,6 +78,43 @@ module decRow(
     assign outByte = outByteReg;
 endmodule
 
+module memRow(
+    input wire clk,
+    input wire [31:0] value,
+    input wire [4:0] outputCharIndex,
+    output wire [7:0] outByte
+);
+
+    reg [7:0] outByteReg;
+
+    genvar i;
+    generate
+        for (i = 0; i < 8; i = i + 1) begin: hexVal 
+            wire [7:0] hexChar;
+            toHex converter(clk, value[(i*4)+:4], hexChar);
+        end
+    endgenerate
+
+    always @(posedge clk) begin
+        case (outputCharIndex)
+            0: outByteReg <= "0";
+            1: outByteReg <= "x";
+            2: outByteReg <= hexVal[7].hexChar;
+            3: outByteReg <= hexVal[6].hexChar;
+            4: outByteReg <= hexVal[5].hexChar;
+            5: outByteReg <= hexVal[4].hexChar;
+            6: outByteReg <= hexVal[3].hexChar;
+            7: outByteReg <= hexVal[2].hexChar;
+            8: outByteReg <= hexVal[1].hexChar;
+            9: outByteReg <= hexVal[0].hexChar;
+            default: outByteReg <= " ";
+        endcase
+    end
+
+    assign outByte = outByteReg;
+
+endmodule
+
 module toDec(
     input wire clk,
     input wire [7:0] value,
@@ -250,14 +287,14 @@ module randomRow(
     assign maxYHeight = currentGraphValue[7:4];
 
     always @(posedge clk) begin
-    outByte[0] <= ({yCoord,3'd7} < maxYHeight);
-    outByte[1] <= ({yCoord,3'd6} < maxYHeight);
-    outByte[2] <= ({yCoord,3'd5} < maxYHeight);
-    outByte[3] <= ({yCoord,3'd4} < maxYHeight);
-    outByte[4] <= ({yCoord,3'd3} < maxYHeight);
-    outByte[5] <= ({yCoord,3'd2} < maxYHeight);
-    outByte[6] <= ({yCoord,3'd1} < maxYHeight);
-    outByte[7] <= ({yCoord,3'd0} < maxYHeight);
-end
+        outByte[0] <= ({yCoord,3'd7} < maxYHeight);
+        outByte[1] <= ({yCoord,3'd6} < maxYHeight);
+        outByte[2] <= ({yCoord,3'd5} < maxYHeight);
+        outByte[3] <= ({yCoord,3'd4} < maxYHeight);
+        outByte[4] <= ({yCoord,3'd3} < maxYHeight);
+        outByte[5] <= ({yCoord,3'd2} < maxYHeight);
+        outByte[6] <= ({yCoord,3'd1} < maxYHeight);
+        outByte[7] <= ({yCoord,3'd0} < maxYHeight);
+    end
 
 endmodule

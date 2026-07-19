@@ -21,7 +21,9 @@ module top
     output wire flashClk,
     input  wire flashMiso,
     output wire flashMosi,
-    output wire flashCs
+    output wire flashCs,
+
+    inout i2cSDA
 );
 
     localparam WAIT_TIME = 13500000;
@@ -38,6 +40,8 @@ module top
     wire uartMsgReady;
     wire [7:0] uartDataIn;
     wire [1:0] rowNumber;
+
+    assign i2cSDA = (isSending & ~sdaOutReg) ? 1'b0 : 1'bz;
 
     always @(posedge clk) begin
         clockCounter <= clockCounter + 24'd1;
@@ -141,23 +145,23 @@ module top
         .outByte(charOut1)
     );
 
-    wire [7:0] counterValue;
+    // wire [7:0] counterValue;
     wire [7:0] charOut2;
 
-    counterM
-    #(
-        .WAIT_TIME(1000000)
-    ) c (
-        .clk(clk),
-        .counterValue(counterValue)
-    );
+    // counterM
+    // #(
+    //     .WAIT_TIME(1000000)
+    // ) c (
+    //     .clk(clk),
+    //     .counterValue(counterValue)
+    // );
 
-    decRow row2(
-        .clk(clk),
-        .value(counterValue),
-        .outputCharIndex(charAddress[3:0]),
-        .outByte(charOut2)
-    );
+    // decRow row2(
+    //     .clk(clk),
+    //     .value(counterValue),
+    //     .outputCharIndex(charAddress[3:0]),
+    //     .outByte(charOut2)
+    // );
 
     // wire [7:0] progressPixelData;
     // progressRow row4(
@@ -172,6 +176,81 @@ module top
         .clk(clk),
         .pixelAddress(pixelAddress),
         .outByte(randomPixelData)
+    );
+
+    wire enabled, readWrite;
+    wire [31:0] dataToMem, dataFromMem;
+    wire [7:0] address;
+
+    wire req1, req2, req3;
+    wire [2:0] grantedAccess;
+    wire readWrite1, readWrite2, readWrite3;
+    wire [31:0] currentMemVal, dataToMem2, dataToMem3;
+    wire [7:0] address1, address2, address3;
+
+    memController fc(
+        .clk(clk),
+        .requestingMemory({req3,req2,req1}),
+        .grantedAccess(grantedAccess),
+        .enabled(enabled),
+        .address(address),
+        .dataToMem(dataToMem),
+        .readWrite(readWrite),
+        .addr1(address1),
+        .addr2(address2),
+        .addr3(address3),
+        .dataToMem1(0),
+        .dataToMem2(dataToMem2),
+        .dataToMem3(dataToMem3),
+        .readWrite1(readWrite1),
+        .readWrite2(readWrite2),
+        .readWrite3(readWrite3)
+    );
+
+    sharedMemory sm(
+        .clk(clk),
+        .address(address),
+        .readWrite(readWrite),
+        .dataOut(dataFromMem),
+        .dataIn(dataToMem),
+        .enabled(enabled)
+    );
+
+    memoryRead mr (
+        .clk(clk),
+        .grantedAccess(grantedAccess[0]),
+        .requestingMemory(req1),
+        .address(address1),
+        .readWrite(readWrite1),
+        .inputData(dataFromMem),
+        .outputData(currentMemVal)
+    );
+
+    memoryIncAtomic m1 (
+        .clk(clk),
+        .grantedAccess(grantedAccess[1]),
+        .requestingMemory(req2),
+        .address(address2),
+        .readWrite(readWrite2),
+        .inputData(dataFromMem),
+        .outputData(dataToMem2)
+    );
+
+    memoryIncAtomic m2 (
+        .clk(clk),
+        .grantedAccess(grantedAccess[2]),
+        .requestingMemory(req3),
+        .address(address3),
+        .readWrite(readWrite3),
+        .inputData(dataFromMem),
+        .outputData(dataToMem3)
+    );
+
+    memRow row2(
+        .clk(clk),
+        .value(currentMemVal),
+        .outputCharIndex(charAddress[3:0]),
+        .outByte(charOut2)
     );
 
     always @(posedge clk) begin
